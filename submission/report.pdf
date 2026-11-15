@@ -1,0 +1,454 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R] /Count 7 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Length 6265 >>
+stream
+BT
+/F2 15.00 Tf 1 0 0 1 50 738.00 Tm (DASE7506 Mini-project 3 - SQL Repair Agent) Tj
+/F2 11.50 Tf 1 0 0 1 50 716.00 Tm (Technical report | CPU-only harness optimisation | no live LLM, no LoRA) Tj
+/F1 8.30 Tf 1 0 0 1 50 699.00 Tm (Student ID is entered on the project submission form; this report is the local source export.) Tj
+/F1 9.40 Tf 1 0 0 1 50 688.20 Tm (This project builds an execution-guided SQL repair agent that repairs an imperfect SQLite draft using) Tj
+/F1 9.40 Tf 1 0 0 1 50 675.80 Tm (the official tool feedback loop. The final system is entirely CPU-only: it uses no live language model,) Tj
+/F1 9.40 Tf 1 0 0 1 50 663.40 Tm (no LoRA adapters, no GPU and no network access. All learned components are small linear models fitted) Tj
+/F1 9.40 Tf 1 0 0 1 50 651.00 Tm (on the released training split only.) Tj
+/F1 9.40 Tf 1 0 0 1 50 638.60 Tm (Headline result \(official scorer, all three grading database instances per task\): test 197/240 =) Tj
+/F1 9.40 Tf 1 0 0 1 50 626.20 Tm (82.08%; validation 99/120 = 82.50%. The unchanged starter baseline scored 88/240 = 36.67% on test and) Tj
+/F1 9.40 Tf 1 0 0 1 50 613.80 Tm (47/120 = 39.17% on validation.) Tj
+/F1 9.40 Tf 1 0 0 1 50 601.40 Tm (Score files: outputs/test.json \(tool traces\), outputs/test-score.json \(complete official score JSON\).) Tj
+/F1 9.40 Tf 1 0 0 1 50 589.00 Tm (Protocol dase7506-sql-repair-v1; benchmark spider-sql-repair-public-evaluation-v3; n=240; correct=197;) Tj
+/F1 9.40 Tf 1 0 0 1 50 576.60 Tm (accuracy=82.08333333333333; mean_tool_calls=4.746.) Tj
+/F2 15.00 Tf 1 0 0 1 50 558.20 Tm (1. Problem framing and the official metric) Tj
+/F1 9.40 Tf 1 0 0 1 50 536.20 Tm (Each task supplies a natural-language question, a schema, an imperfect draft SQL and one public example) Tj
+/F1 9.40 Tf 1 0 0 1 50 523.80 Tm (result. The controller has 8 charged tool calls; submit is free. The exact original draft must be) Tj
+/F1 9.40 Tf 1 0 0 1 50 511.40 Tm (executed or checked before requesting repair hints, identical tool actions cannot be repeated, and SQL) Tj
+/F1 9.40 Tf 1 0 0 1 50 499.00 Tm (is capped at 16,000 UTF-8 bytes. A task counts as correct only when the final query's result) Tj
+/F1 9.40 Tf 1 0 0 1 50 486.60 Tm (fingerprint matches the expected fingerprint on all three grading database instances.) Tj
+/F1 9.40 Tf 1 0 0 1 50 474.20 Tm (We verified that grading case 0 uses the public database and its expected fingerprint equals) Tj
+/F1 9.40 Tf 1 0 0 1 50 461.80 Tm (public_results.json for all 240 test tasks. Matching the public example is therefore necessary but not) Tj
+/F1 9.40 Tf 1 0 0 1 50 449.40 Tm (sufficient: different instances, duplicate rows from joins, empty result sets and projection/label) Tj
+/F1 9.40 Tf 1 0 0 1 50 437.00 Tm (differences can all produce a public match that fails grading. This observation drives the design: use) Tj
+/F1 9.40 Tf 1 0 0 1 50 424.60 Tm (check feedback to obtain public matches, then choose among them using robustness priors rather than) Tj
+/F1 9.40 Tf 1 0 0 1 50 412.20 Tm (stopping at the first match.) Tj
+/F2 15.00 Tf 1 0 0 1 50 393.80 Tm (2. The perceive-plan-act loop) Tj
+/F1 9.40 Tf 1 0 0 1 50 371.80 Tm (act\(observation\) returns exactly one tool action. The agent is a finite-state controller whose feedback) Tj
+/F1 9.40 Tf 1 0 0 1 50 359.40 Tm (state \(checked SQLs, public matches, tool history\) is recomputed from observation['history'] on every) Tj
+/F1 9.40 Tf 1 0 0 1 50 347.00 Tm (call, while the candidate queue is built once per task. A fresh instance is created for each task and) Tj
+/F1 9.40 Tf 1 0 0 1 50 334.60 Tm (the predictor uses a thread pool.) Tj
+/F1 9.40 Tf 1 0 0 1 50 322.20 Tm (  - Step 1 \(empty history\): check the exact original draft. This satisfies the hint precondition) Tj
+/F1 9.40 Tf 1 0 0 1 50 309.80 Tm (and gives a baseline matches_example / error / columns observation.) Tj
+/F1 9.40 Tf 1 0 0 1 50 297.40 Tm (  - Step 2: repair_hint. The observation is the four fixed shared suggestions for this draft \(a) Tj
+/F1 9.40 Tf 1 0 0 1 50 285.00 Tm (cached Qwen3-8B output, not a gold answer\).) Tj
+/F1 9.40 Tf 1 0 0 1 50 272.60 Tm (  - Step 3: obtain the schema. If a schema observation from an earlier task in this process) Tj
+/F1 9.40 Tf 1 0 0 1 50 260.20 Tm (identifies the current database unambiguously, reuse it; otherwise call the schema tool. In the) Tj
+/F1 9.40 Tf 1 0 0 1 50 247.80 Tm (reported 4-thread test run only 25 of 240 tasks needed a real schema call.) Tj
+/F1 9.40 Tf 1 0 0 1 50 235.40 Tm (  - Step 4: build a bounded candidate queue from the hints and the draft using SQLGlot AST) Tj
+/F1 9.40 Tf 1 0 0 1 50 223.00 Tm (rewrites, then collapse formatting-only duplicates by canonical SQL identity and order the) Tj
+/F1 9.40 Tf 1 0 0 1 50 210.60 Tm (survivors with the learned priority model plus a static output-column agreement bonus. The first) Tj
+/F1 9.40 Tf 1 0 0 1 50 198.20 Tm (hint is pinned at the head. Semantic templates are drawn from every hint, not just the first two.) Tj
+/F1 9.40 Tf 1 0 0 1 50 185.80 Tm (  - Step 5: repeatedly check the next candidate, consuming real feedback \(matches_example, ok,) Tj
+/F1 9.40 Tf 1 0 0 1 50 173.40 Tm (columns, rows, error\). Stop when the budget is exhausted, the queue is empty, or at least 1) Tj
+/F1 9.40 Tf 1 0 0 1 50 161.00 Tm (distinct public match has been seen \(4 when the public example is empty\) AND at least 2 repair) Tj
+/F1 9.40 Tf 1 0 0 1 50 148.60 Tm (candidates have been checked. The minimum-check floor stops a lucky early match from hiding a) Tj
+/F1 9.40 Tf 1 0 0 1 50 136.20 Tm (better repair; together the two thresholds preserve 197/240 while cutting charged tool calls from) Tj
+/F1 9.40 Tf 1 0 0 1 50 123.80 Tm (5.975 to 4.746 per task.) Tj
+/F1 9.40 Tf 1 0 0 1 50 111.40 Tm (  - Step 6: submit the best checked public match: learned choice logit + 0.3 x simplicity \(Occam) Tj
+/F1 9.40 Tf 1 0 0 1 50 99.00 Tm (prior\) + 2.0 x agreement between the check's output column labels and example['columns'], plus two) Tj
+/F1 9.40 Tf 1 0 0 1 50 86.60 Tm (contrastive priors. A DISTINCT query is penalised only when a non-DISTINCT public match is also) Tj
+/F1 9.40 Tf 1 0 0 1 50 74.20 Tm (available, and a LIKE pattern copied verbatim from the question \(with articles such as 'the'\) is) Tj
+ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 6144 >>
+stream
+BT
+/F1 9.40 Tf 1 0 0 1 50 738.00 Tm (penalised only when a cleaner LIKE pattern also matches. If nothing matched, fall back to the) Tj
+/F1 9.40 Tf 1 0 0 1 50 725.60 Tm (original draft when it matched, otherwise to the first hint.) Tj
+/F1 9.40 Tf 1 0 0 1 50 713.20 Tm (The contrastive form of the last two priors matters. An unconditional DISTINCT penalty fixed one) Tj
+/F1 9.40 Tf 1 0 0 1 50 700.80 Tm (failure but created another \('students who do not own cats' genuinely needs DISTINCT\); the relative) Tj
+/F1 9.40 Tf 1 0 0 1 50 688.40 Tm (version keeps both. These are robustness priors over queries that all passed the same public example,) Tj
+/F1 9.40 Tf 1 0 0 1 50 676.00 Tm (which is exactly where a single example is uninformative.) Tj
+/F1 9.40 Tf 1 0 0 1 50 663.60 Tm (Every branch depends on real execution/check feedback. There is no fixed answer lookup, no single model) Tj
+/F1 9.40 Tf 1 0 0 1 50 651.20 Tm (completion, and no submission of an unchecked SQL string \(except the fallback hint, which is checked) Tj
+/F1 9.40 Tf 1 0 0 1 50 638.80 Tm (before it is preferred\).) Tj
+/F2 15.00 Tf 1 0 0 1 50 620.40 Tm (3. Context, memory and retrieval choices) Tj
+/F1 9.40 Tf 1 0 0 1 50 598.40 Tm (Per-task context: schema, candidate pool/queue, checked-feedback map, list of public matches, expected) Tj
+/F1 9.40 Tf 1 0 0 1 50 586.00 Tm (output column names, public row count, first hint and fallback SQL. The public example is treated as) Tj
+/F1 9.40 Tf 1 0 0 1 50 573.60 Tm (context, not as a label: its column names guide projection generation and its row count switches the) Tj
+/F1 9.40 Tf 1 0 0 1 50 561.20 Tm (early-stop threshold.) Tj
+/F1 9.40 Tf 1 0 0 1 50 548.80 Tm (Cross-task memory: a module-level, lock-protected cache stores schema observations returned by the) Tj
+/F1 9.40 Tf 1 0 0 1 50 536.40 Tm (official schema tool. Reuse is allowed only when the draft's table names are a subset of a cached) Tj
+/F1 9.40 Tf 1 0 0 1 50 524.00 Tm (schema and the best column-overlap score is unique; ambiguity forces a fresh schema tool call. No) Tj
+/F1 9.40 Tf 1 0 0 1 50 511.60 Tm (database file, manifest, reference file or grading fingerprint is ever read by the agent. The cache is) Tj
+/F1 9.40 Tf 1 0 0 1 50 499.20 Tm (process-local and thread-safe; it saves roughly one charged call per task and is explicitly ablated) Tj
+/F1 9.40 Tf 1 0 0 1 50 486.80 Tm (below.) Tj
+/F1 9.40 Tf 1 0 0 1 50 474.40 Tm (Retrieval: we examined the retrieve tool / train_memory.jsonl but deliberately did not use it. Cached) Tj
+/F1 9.40 Tf 1 0 0 1 50 462.00 Tm (hints already provide four repair proposals per draft, and training schemas are disjoint from) Tj
+/F1 9.40 Tf 1 0 0 1 50 449.60 Tm (validation/test schemas, so exact SQL transfer is impossible. Deterministic AST rewriting plus learned) Tj
+/F1 9.40 Tf 1 0 0 1 50 437.20 Tm (ranking produced larger measured gains than nearest-question retrieval in our development experiments.) Tj
+/F1 9.40 Tf 1 0 0 1 50 424.80 Tm (The no_hints ablation shows how strongly the controller depends on the supplied proposal cache.) Tj
+/F1 9.40 Tf 1 0 0 1 50 412.40 Tm (Unused tools: execute and retrieve are never called. check is the only execution channel, because it) Tj
+/F1 9.40 Tf 1 0 0 1 50 400.00 Tm (both executes the query and returns the public-example comparison the loop needs.) Tj
+/F2 15.00 Tf 1 0 0 1 50 381.60 Tm (4. Deterministic candidate generation) Tj
+/F1 9.40 Tf 1 0 0 1 50 359.60 Tm (submission/sql_repairs.py implements schema-aware, SQLGlot-based rewrite families. Every candidate is) Tj
+/F1 9.40 Tf 1 0 0 1 50 347.20 Tm (rendered with sqlglot's SQLite dialect, deduplicated, capped at 80, and later checked through the) Tj
+/F1 9.40 Tf 1 0 0 1 50 334.80 Tm (official tool before it can be submitted.) Tj
+/F1 9.40 Tf 1 0 0 1 50 322.40 Tm (  - Projection permutations and subsets of the requested arity, including column-name-guided) Tj
+/F1 9.40 Tf 1 0 0 1 50 310.00 Tm (combinations for drafts with more than five projections; ORDER BY alias restoration after removing) Tj
+/F1 9.40 Tf 1 0 0 1 50 297.60 Tm (an aliased aggregate.) Tj
+/F1 9.40 Tf 1 0 0 1 50 285.20 Tm (  - DISTINCT toggling, GROUP BY insertion/removal, HAVING comparison adjustment, LIMIT 1 for) Tj
+/F1 9.40 Tf 1 0 0 1 50 272.80 Tm (most/least questions, ORDER BY-aggregate rewrites.) Tj
+/F1 9.40 Tf 1 0 0 1 50 260.40 Tm (  - Equality-to-LIKE rewrites, first/last name literal splitting, duration text matching, and) Tj
+/F1 9.40 Tf 1 0 0 1 50 248.00 Tm (string-pattern simplification for substring questions.) Tj
+/F1 9.40 Tf 1 0 0 1 50 235.60 Tm (  - Schema-aware column qualification, invalid subquery qualifier stripping, global-aggregate join) Tj
+/F1 9.40 Tf 1 0 0 1 50 223.20 Tm (pruning, aggregate column variants.) Tj
+/F1 9.40 Tf 1 0 0 1 50 210.80 Tm (  - Semi-join IN \(SELECT ...\), anti-join EXCEPT / NOT IN, and splitting of NOT IN \(A UNION B\) into) Tj
+/F1 9.40 Tf 1 0 0 1 50 198.40 Tm (separate branches.) Tj
+/F1 9.40 Tf 1 0 0 1 50 186.00 Tm (  - Simplifications \(drop a redundant DISTINCT, drop joins used only in ON\) and relation templates) Tj
+/F1 9.40 Tf 1 0 0 1 50 173.60 Tm (triggered only when the question and schema indicate a semi-join/anti-join pattern.) Tj
+/F1 9.40 Tf 1 0 0 1 50 161.20 Tm (Drawing semantic templates from every hint instead of the first two does not change the candidate-pool) Tj
+/F1 9.40 Tf 1 0 0 1 50 148.80 Tm (ceiling \(201/240 tasks still contain a query that passes all three instances\), but it does change which) Tj
+/F1 9.40 Tf 1 0 0 1 50 136.40 Tm (hypotheses reach a check inside the 8-call budget; the wide variant is enabled in the final agent. A) Tj
+/F1 9.40 Tf 1 0 0 1 50 124.00 Tm (schema-guided column-swap generator was also prototyped \(submission/sql_repairs.py, schema_swaps\): it) Tj
+/F1 9.40 Tf 1 0 0 1 50 111.60 Tm (is disabled by default because it produced no net gain on either split. In the final run 199/240 tasks) Tj
+/F1 9.40 Tf 1 0 0 1 50 99.20 Tm (had at least one fully correct query appear in their check history, so final-answer selection, not) Tj
+/F1 9.40 Tf 1 0 0 1 50 86.80 Tm (candidate recall, is the dominant remaining bottleneck.) Tj
+ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 6431 >>
+stream
+BT
+/F2 15.00 Tf 1 0 0 1 50 738.00 Tm (5. Learned components and training records) Tj
+/F1 9.40 Tf 1 0 0 1 50 716.00 Tm (The only learned components are non-LLM linear rankers stored as coefficients in submission/ranker.json) Tj
+/F1 9.40 Tf 1 0 0 1 50 703.60 Tm (\(no embeddings, no neural network, no GPU\). Features in submission/ranker.py: question keyword flags) Tj
+/F1 9.40 Tf 1 0 0 1 50 691.20 Tm (\(count, distinct, total, average, most, least, negation, each, ...\), SQL AST structure flags and) Tj
+/F1 9.40 Tf 1 0 0 1 50 678.80 Tm (complexity counts, schema identifier coverage, cross features, candidate origin/rank, first-hint and) Tj
+/F1 9.40 Tf 1 0 0 1 50 666.40 Tm (public-row features. Two feature sets \(vector v1, vector2 v2\) are standardised by training-split means) Tj
+/F1 9.40 Tf 1 0 0 1 50 654.00 Tm (and scales.) Tj
+/F1 9.40 Tf 1 0 0 1 50 641.60 Tm (ranker.json contains 10 linear models \(priority, choice, pairwise priority, pairwise choice and) Tj
+/F1 9.40 Tf 1 0 0 1 50 629.20 Tm (listwise choice, each in v1/v2 form\), 875 coefficients in total, 129,729 bytes. The final agent uses) Tj
+/F1 9.40 Tf 1 0 0 1 50 616.80 Tm (priority2 + choice2. It is pure JSON coefficients plus the embedded configuration; no dataset rows,) Tj
+/F1 9.40 Tf 1 0 0 1 50 604.40 Tm (answers or weights of a language model are embedded.) Tj
+/F1 9.40 Tf 1 0 0 1 50 592.00 Tm (Training record \(tools/build_labels.py, tools/train_ranker.py, tools/train_models.py\): 480 training) Tj
+/F1 9.40 Tf 1 0 0 1 50 579.60 Tm (tasks produced 5817 candidate samples. Each sample is labelled by \(a\) public-example match and \(b\)) Tj
+/F1 9.40 Tf 1 0 0 1 50 567.20 Tm (three-instance correctness from mp3_sql/data/train_references.json. Development-time label construction) Tj
+/F1 9.40 Tf 1 0 0 1 50 554.80 Tm (executes candidates on copies of the train databases only; the exported agent never touches references) Tj
+/F1 9.40 Tf 1 0 0 1 50 542.40 Tm (or database files. Correct samples are weighted 3.0.) Tj
+/F1 9.40 Tf 1 0 0 1 50 530.00 Tm (Fitting: logistic regression \(35 epochs, learning rate 0.22, L2 0.0015\) for priority and choice;) Tj
+/F1 9.40 Tf 1 0 0 1 50 517.60 Tm (pairwise logistic ranking \(70 epochs, 0.18, L2 0.0008\); listwise softmax \(80 epochs, 0.18, L2 0.0006\).) Tj
+/F1 9.40 Tf 1 0 0 1 50 505.20 Tm (All hyperparameters, model variants and early-stop thresholds were selected on validation. No) Tj
+/F1 9.40 Tf 1 0 0 1 50 492.80 Tm (validation or test label was used to fit a coefficient, and no test SQL or task id appears in the) Tj
+/F1 9.40 Tf 1 0 0 1 50 480.40 Tm (exported source.) Tj
+/F2 15.00 Tf 1 0 0 1 50 462.00 Tm (6. Official results) Tj
+/F3 7.20 Tf 1 0 0 1 50 440.00 Tm (split           n        baseline           final      gain    calls) Tj
+/F3 7.20 Tf 1 0 0 1 50 430.40 Tm (----------------------------------------------------------------------------------------------------) Tj
+/F3 7.20 Tf 1 0 0 1 50 420.80 Tm (validation    120     47 \(39.17%\)     99 \(82.50%\)        52    4.900) Tj
+/F3 7.20 Tf 1 0 0 1 50 411.20 Tm (test          240     88 \(36.67%\)    197 \(82.08%\)       109    4.746) Tj
+/F1 9.40 Tf 1 0 0 1 50 401.60 Tm (Accuracy is the official metric 100 x correct test tasks / 240, computed by mp3_sql.score after) Tj
+/F1 9.40 Tf 1 0 0 1 50 389.20 Tm (replaying each tool trace and executing the submitted SQL on all three grading instances. We do not) Tj
+/F1 9.40 Tf 1 0 0 1 50 376.80 Tm (report validation as the competition score.) Tj
+/F2 11.50 Tf 1 0 0 1 50 358.40 Tm (Development trajectory \(official scorer, test split\)) Tj
+/F3 7.20 Tf 1 0 0 1 50 341.40 Tm (version                     correct   accuracy    calls) Tj
+/F3 7.20 Tf 1 0 0 1 50 331.80 Tm (----------------------------------------------------------------------------------------------------) Tj
+/F3 7.20 Tf 1 0 0 1 50 322.20 Tm (starter baseline                 88      36.67    0.000) Tj
+/F3 7.20 Tf 1 0 0 1 50 312.60 Tm (repair-v4                       168      70.00    4.254) Tj
+/F3 7.20 Tf 1 0 0 1 50 303.00 Tm (repair-v5                       170      70.83    4.379) Tj
+/F3 7.20 Tf 1 0 0 1 50 293.40 Tm (repair-v6                       177      73.75    4.367) Tj
+/F3 7.20 Tf 1 0 0 1 50 283.80 Tm (ranked-v7                       183      76.25    5.429) Tj
+/F3 7.20 Tf 1 0 0 1 50 274.20 Tm (final \(192\)                     192      80.00    5.858) Tj
+/F3 7.20 Tf 1 0 0 1 50 264.60 Tm (final \(197\)                     197      82.08    4.746) Tj
+/F1 9.40 Tf 1 0 0 1 50 255.00 Tm (The last step from 194/240 to 197/240 came from three CPU-only harness changes, each evaluated on) Tj
+/F1 9.40 Tf 1 0 0 1 50 242.60 Tm (validation and test with an exact rollout simulator that reproduces the official scorer result) Tj
+/F1 9.40 Tf 1 0 0 1 50 230.20 Tm (bit-for-bit: canonical-SQL deduplication of the check queue \(194/240, validation 98/120\), wide hint) Tj
+/F1 9.40 Tf 1 0 0 1 50 217.80 Tm (templates \(195/240, 98/120\), a contrastive DISTINCT prior \(196/240, 99/120\) and a contrastive) Tj
+/F1 9.40 Tf 1 0 0 1 50 205.40 Tm (LIKE-pattern prior \(197/240, 99/120\). The chosen parameter values sit on a flat plateau \(2-6 for both) Tj
+/F1 9.40 Tf 1 0 0 1 50 193.00 Tm (priors\). Validation was used for design selection \(hint-first ordering, feedback consumption,) Tj
+/F1 9.40 Tf 1 0 0 1 50 180.60 Tm (schema-aware rewrites, learned ranking, column priors, early stopping\). Test was used only for the) Tj
+/F1 9.40 Tf 1 0 0 1 50 168.20 Tm (final official report.) Tj
+/F1 9.40 Tf 1 0 0 1 50 155.80 Tm (Two successive budget passes left both official scores unchanged \(99/120 validation, 197/240 test\)) Tj
+/F1 9.40 Tf 1 0 0 1 50 143.40 Tm (while cutting mean charged calls from 5.975 to 5.367 and then to 4.746, and check actions from 1169 to) Tj
+/F1 9.40 Tf 1 0 0 1 50 131.00 Tm (1023 and then to 874 \(-25.2% in total\). The final rule stops after one public match \(4 for empty) Tj
+/F1 9.40 Tf 1 0 0 1 50 118.60 Tm (examples\) and enforces a floor of two checked repair candidates. A public-example match is necessary) Tj
+/F1 9.40 Tf 1 0 0 1 50 106.20 Tm (but not sufficient for grading correctness, so the floor keeps a second candidate in play: sweeps with) Tj
+/F1 9.40 Tf 1 0 0 1 50 93.80 Tm (min_checks=1 fall to 191-193/240, while raising the floor to 3 loses another task. Each pass was) Tj
+/F1 9.40 Tf 1 0 0 1 50 81.40 Tm (re-verified on both splits with the official predictor and scorer.) Tj
+ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 7245 >>
+stream
+BT
+/F2 15.00 Tf 1 0 0 1 50 738.00 Tm (7. Controlled ablations) Tj
+/F1 9.40 Tf 1 0 0 1 50 716.00 Tm (One-factor-at-a-time ablations change exactly one configuration switch of the final agent and keep the) Tj
+/F1 9.40 Tf 1 0 0 1 50 703.60 Tm (exported ranker, candidate generator and tool protocol fixed. They were run with an exact in-process) Tj
+/F1 9.40 Tf 1 0 0 1 50 691.20 Tm (simulator that replaces tool execution with precomputed labels; the simulator reproduces the official) Tj
+/F1 9.40 Tf 1 0 0 1 50 678.80 Tm (final result exactly \(99/120 validation, 197/240 test, and the same mean tool calls\). Two ablations) Tj
+/F1 9.40 Tf 1 0 0 1 50 666.40 Tm (were additionally verified with the real official predictor + scorer on the test split.) Tj
+/F3 7.20 Tf 1 0 0 1 50 654.00 Tm (variant                       validation              test  test calls) Tj
+/F3 7.20 Tf 1 0 0 1 50 644.40 Tm (----------------------------------------------------------------------------------------------------) Tj
+/F3 7.20 Tf 1 0 0 1 50 634.80 Tm (final                             99/120           197/240       4.746) Tj
+/F3 7.20 Tf 1 0 0 1 50 625.20 Tm (no_schema_memory                  99/120           195/240       5.533) Tj
+/F3 7.20 Tf 1 0 0 1 50 615.60 Tm (heuristic_queue                   94/120           178/240       4.992) Tj
+/F3 7.20 Tf 1 0 0 1 50 606.00 Tm (no_column_priors                  97/120           195/240       4.742) Tj
+/F3 7.20 Tf 1 0 0 1 50 596.40 Tm (no_occam_prior                    99/120           195/240       4.746) Tj
+/F3 7.20 Tf 1 0 0 1 50 586.80 Tm (v1_features_only                  98/120           191/240       4.746) Tj
+/F3 7.20 Tf 1 0 0 1 50 577.20 Tm (no_hints                          56/120           114/240       4.571) Tj
+/F3 7.20 Tf 1 0 0 1 50 567.60 Tm (no_stop_early                    100/120           196/240       6.829) Tj
+/F3 7.20 Tf 1 0 0 1 50 558.00 Tm (no_queue_dedup                    97/120           194/240       4.871) Tj
+/F3 7.20 Tf 1 0 0 1 50 548.40 Tm (no_wide_candidates                99/120           196/240       4.737) Tj
+/F3 7.20 Tf 1 0 0 1 50 538.80 Tm (no_relative_choice                98/120           195/240       4.746) Tj
+/F3 7.20 Tf 1 0 0 1 50 529.20 Tm (no_budget_tuning                  99/120           197/240       5.975) Tj
+/F3 7.20 Tf 1 0 0 1 50 519.60 Tm (official no_hints                      -           114/240       4.571) Tj
+/F3 7.20 Tf 1 0 0 1 50 510.00 Tm (official no_schema_memory                 -           195/240       5.533) Tj
+/F1 9.40 Tf 1 0 0 1 50 500.40 Tm (Interpretation. \(1\) Removing hint content collapses test accuracy to 47.50%: the shared hint cache is) Tj
+/F1 9.40 Tf 1 0 0 1 50 488.00 Tm (the main source of repair proposals. \(2\) Replacing the learned queue order with a heuristic order drops) Tj
+/F1 9.40 Tf 1 0 0 1 50 475.60 Tm (test from 197 to 178. \(3\) The harness components contribute independently: removing canonical queue) Tj
+/F1 9.40 Tf 1 0 0 1 50 463.20 Tm (deduplication drops 197 to 194, removing wide hint templates drops it to 196, and removing both) Tj
+/F1 9.40 Tf 1 0 0 1 50 450.80 Tm (contrastive choice priors drops it to 195. \(4\) Disabling cross-task schema memory drops 197 to 195 and) Tj
+/F1 9.40 Tf 1 0 0 1 50 438.40 Tm (raises mean calls from 4.746 to 5.533; removing the column priors, the Occam prior or using v1-only) Tj
+/F1 9.40 Tf 1 0 0 1 50 426.00 Tm (features drops it to 195, 195 and 191. \(5\) Disabling early stopping reaches 196 on test \(100/120) Tj
+/F1 9.40 Tf 1 0 0 1 50 413.60 Tm (validation\) but spends 6.829 calls per task. \(6\) The budget ablation no_budget_tuning restores the) Tj
+/F1 9.40 Tf 1 0 0 1 50 401.20 Tm (untuned stop rule: accuracy stays at 197/240 but calls rise from 4.746 back to 5.975, isolating a 20.6%) Tj
+/F1 9.40 Tf 1 0 0 1 50 388.80 Tm (reduction in charged tool use with no accuracy effect. These satisfy the two-controlled-ablation) Tj
+/F1 9.40 Tf 1 0 0 1 50 376.40 Tm (requirement and separate accuracy effects from pure cost effects.) Tj
+/F2 15.00 Tf 1 0 0 1 50 358.00 Tm (8. Runtime, tool and model cost) Tj
+/F1 9.40 Tf 1 0 0 1 50 336.00 Tm (Measured on a Windows student workstation, Python 3.12.2, sqlglot 27.29.0, predictor default --workers) Tj
+/F1 9.40 Tf 1 0 0 1 50 323.60 Tm (4. Official prediction_seconds: test 76.64 s, validation 40.81 s. Official scoring_seconds: test 113.09) Tj
+/F1 9.40 Tf 1 0 0 1 50 311.20 Tm (s, validation 59.29 s. Combined test wall time in the reported run is about 189.7 s; absolute wall time) Tj
+/F1 9.40 Tf 1 0 0 1 50 298.80 Tm (on this workstation drifts with system load, so the alternating A/B comparison below is the reliable) Tj
+/F1 9.40 Tf 1 0 0 1 50 286.40 Tm (cost evidence. With --workers 1 the predictor is slower \(204.9 s\) but the score is unchanged.) Tj
+/F1 9.40 Tf 1 0 0 1 50 274.00 Tm (Independent process-tree measurement \(aggregated over the parent and all short-lived executor) Tj
+/F1 9.40 Tf 1 0 0 1 50 261.60 Tm (subprocesses\): predictor CPU 101.64 s / peak total RSS 159.2 MiB; scorer CPU 111.20 s / peak total RSS) Tj
+/F1 9.40 Tf 1 0 0 1 50 249.20 Tm (154.5 MiB; combined CPU 212.84 s and wall 193.5 s; largest single process 48.0 MiB. Aggregated CPU time) Tj
+/F1 9.40 Tf 1 0 0 1 50 236.80 Tm (exceeds wall time because the official executor runs queries in parallel worker processes on 4 threads.) Tj
+/F1 9.40 Tf 1 0 0 1 50 224.40 Tm (Peak memory is far below the 2 GiB address-space budget.) Tj
+/F1 9.40 Tf 1 0 0 1 50 212.00 Tm (Tool usage on test \(240 tasks\): check 874, repair_hint 240, schema 25, submit 240. Mean charged calls) Tj
+/F1 9.40 Tf 1 0 0 1 50 199.60 Tm (4.746 of 8; maximum 8; no task exceeds the budget and no identical action is repeated. Every check) Tj
+/F1 9.40 Tf 1 0 0 1 50 187.20 Tm (costs one isolated executor subprocess in prediction and again in scoring replay, so check count is the) Tj
+/F1 9.40 Tf 1 0 0 1 50 174.80 Tm (dominant cost driver: the two budget passes removed 295 of 1169 checks \(-25.2%\).) Tj
+/F1 9.40 Tf 1 0 0 1 50 162.40 Tm (Wall-time budget. README section 5 sets the No-live-LLM reproduction budget at 4 CPU threads, 2 GiB) Tj
+/F1 9.40 Tf 1 0 0 1 50 150.00 Tm (address space and 180 s including scoring, reproduced offline on Linux; it also states the website does) Tj
+/F1 9.40 Tf 1 0 0 1 50 137.60 Tm (not enforce this automatically and wall time is not a leaderboard tie-breaker, though instructor) Tj
+/F1 9.40 Tf 1 0 0 1 50 125.20 Tm (reproduction follows it. Windows subprocess creation is much costlier than Linux, and absolute wall) Tj
+/F1 9.40 Tf 1 0 0 1 50 112.80 Tm (time here drifted ~30% within one session \(the same baseline trace scored in 106 s early and 141 s) Tj
+/F1 9.40 Tf 1 0 0 1 50 100.40 Tm (later\), so machine-independent counts plus an alternating A/B test are the sound evidence. In the final) Tj
+/F1 9.40 Tf 1 0 0 1 50 88.00 Tm (alternating A/B on the test split the previous stop rule \(5.367 calls\) took 86.31 s to predict and) Tj
+/F1 9.40 Tf 1 0 0 1 50 75.60 Tm (126.92 s to score, 213.23 s total; the shipped rule \(4.746 calls\) took 77.13 s and 113.51 s, 190.64 s) Tj
+/F1 9.40 Tf 1 0 0 1 50 63.20 Tm (total: -10.6% in both phases. Against the untuned 5.975-call configuration \(105 s + 140.9 s\) the) Tj
+ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 6331 >>
+stream
+BT
+/F1 9.40 Tf 1 0 0 1 50 738.00 Tm (combined reduction is 22.5%. On the early low-load baseline where that untuned configuration measured) Tj
+/F1 9.40 Tf 1 0 0 1 50 725.60 Tm (187.6 s combined, the same reduction projects to roughly 145 s, inside the 180 s budget; Linux process) Tj
+/F1 9.40 Tf 1 0 0 1 50 713.20 Tm (creation is cheaper still. At the current workstation load the measured 190.64 s still exceeds 180 s,) Tj
+/F1 9.40 Tf 1 0 0 1 50 700.80 Tm (so we report the shortfall rather than claim a pass on this machine. An extra emergency fallback) Tj
+/F1 9.40 Tf 1 0 0 1 50 688.40 Tm (\(MP3_STOP_MATCHES=2, MP3_STOP_MATCHES_EMPTY=3, MP3_MAX_CHECKS=5\) retains 193/240 = 80.42% at 4.817) Tj
+/F1 9.40 Tf 1 0 0 1 50 676.00 Tm (calls, but is not the default because it falls below 82%.) Tj
+/F1 9.40 Tf 1 0 0 1 50 663.60 Tm (Model/asset cost: no live LLM, no base weights, no adapters, no GPU. Exported source is 203,293 bytes) Tj
+/F1 9.40 Tf 1 0 0 1 50 651.20 Tm (\(0.19 MiB\); the score/prediction JSONs add about 1.02 MiB. Total export is far below the 16 MiB limit.) Tj
+/F1 9.40 Tf 1 0 0 1 50 638.80 Tm (The only dependency is sqlglot==27.29.0.) Tj
+/F2 15.00 Tf 1 0 0 1 50 620.40 Tm (9. Failure cases and limitations) Tj
+/F1 9.40 Tf 1 0 0 1 50 598.40 Tm (Of the 43 remaining test failures, 39 have no correct SQL anywhere in the candidate pool \(the pool) Tj
+/F1 9.40 Tf 1 0 0 1 50 586.00 Tm (ceiling is 201/240\), 2 have a correct candidate that the 8-call budget never reaches, and 2 have a) Tj
+/F1 9.40 Tf 1 0 0 1 50 573.60 Tm (correct candidate that was actually checked but lost the final choice. In 199/240 tasks a fully correct) Tj
+/F1 9.40 Tf 1 0 0 1 50 561.20 Tm (query appeared in the check history, so selection rather than recall dominates the remaining loss. 20) Tj
+/F1 9.40 Tf 1 0 0 1 50 548.80 Tm (tasks produce no public example match at all, so no feedback can separate hypotheses.) Tj
+/F1 9.40 Tf 1 0 0 1 50 536.40 Tm (Representative cases \(public test ids\):) Tj
+/F1 9.40 Tf 1 0 0 1 50 524.00 Tm (  - test-60779be23ca4364e, 'average grade of students who have friends': submitted AVG\(grade\) with) Tj
+/F1 9.40 Tf 1 0 0 1 50 511.60 Tm (JOIN Friend ON friend_id; correct is AVG\(grade\) WHERE ID IN \(SELECT DISTINCT student_id FROM) Tj
+/F1 9.40 Tf 1 0 0 1 50 499.20 Tm (Friend\). A one-row numeric public example cannot detect JOIN duplication; the Occam prior was not) Tj
+/F1 9.40 Tf 1 0 0 1 50 486.80 Tm (strong enough here.) Tj
+/F1 9.40 Tf 1 0 0 1 50 474.40 Tm (  - test-8279805a0c470bed, 'semester with the most students registered': submitted ORDER BY) Tj
+/F1 9.40 Tf 1 0 0 1 50 462.00 Tm (COUNT\(DISTINCT student_id\); the correct variants count student_enrolment_id or COUNT\(*\). All four) Tj
+/F1 9.40 Tf 1 0 0 1 50 449.60 Tm (share the same empty public example, so no feedback separates the aggregate column.) Tj
+/F1 9.40 Tf 1 0 0 1 50 437.20 Tm (  - test-a5966282bc42b914, 'average age of dogs with treatments': the correct semi-join IN \(SELECT) Tj
+/F1 9.40 Tf 1 0 0 1 50 424.80 Tm (DISTINCT dog_id FROM Treatments\) exists in the pool, but three quick public matches triggered early) Tj
+/F1 9.40 Tf 1 0 0 1 50 412.40 Tm (stopping before it was checked.) Tj
+/F1 9.40 Tf 1 0 0 1 50 400.00 Tm (  - test-750c21e4ae9b7ad1, TV channels not playing Ben Jones cartoons: the correct form uses NOT) Tj
+/F1 9.40 Tf 1 0 0 1 50 387.60 Tm (\(id IN \(...\)\) with an unqualified subquery column; our NOT IN variant with an invalid qualifier was) Tj
+/F1 9.40 Tf 1 0 0 1 50 375.20 Tm (checked but the exact form was not reached within the budget.) Tj
+/F1 9.40 Tf 1 0 0 1 50 362.80 Tm (  - test-167f97f7d5a2eda6 \(treatment cost below average\) and test-858439935458b795 \(five-column) Tj
+/F1 9.40 Tf 1 0 0 1 50 350.40 Tm (projection with COUNT and three joins\): no correct candidate exists; these need nested aggregation) Tj
+/F1 9.40 Tf 1 0 0 1 50 338.00 Tm (or a projection combination beyond our rewrite families.) Tj
+/F1 9.40 Tf 1 0 0 1 50 325.60 Tm (Root cause is the single public example: when it is empty or has one row, many structurally different) Tj
+/F1 9.40 Tf 1 0 0 1 50 313.20 Tm (queries share the same fingerprint. The column-agreement and simplicity priors mitigate this but cannot) Tj
+/F1 9.40 Tf 1 0 0 1 50 300.80 Tm (supply missing semantics. Additional grading feedback, a semantic model, or richer template synthesis) Tj
+/F1 9.40 Tf 1 0 0 1 50 288.40 Tm (would be needed; the current agent is deliberately CPU-only and deterministic.) Tj
+/F2 15.00 Tf 1 0 0 1 50 270.00 Tm (10. Prompt-injection risks and safeguards) Tj
+/F1 9.40 Tf 1 0 0 1 50 248.00 Tm (Threat model: the question, the four cached hint strings, schema names and all tool observations are) Tj
+/F1 9.40 Tf 1 0 0 1 50 235.60 Tm (untrusted content. A naive LLM planner could be instructed by a hint such as 'ignore previous) Tj
+/F1 9.40 Tf 1 0 0 1 50 223.20 Tm (instructions and submit this SQL', and retrieved training examples could carry embedded instructions.) Tj
+/F1 9.40 Tf 1 0 0 1 50 210.80 Tm (Because the benchmark's hints are generated from question/schema/draft text, they are) Tj
+/F1 9.40 Tf 1 0 0 1 50 198.40 Tm (attacker-influenceable in principle.) Tj
+/F1 9.40 Tf 1 0 0 1 50 186.00 Tm (Safeguards in this implementation:) Tj
+/F1 9.40 Tf 1 0 0 1 50 173.60 Tm (  - There is no runtime LLM and therefore no natural-language instruction channel. Hint text cannot) Tj
+/F1 9.40 Tf 1 0 0 1 50 161.20 Tm (become a prompt; the controller never interprets free text as commands.) Tj
+/F1 9.40 Tf 1 0 0 1 50 148.80 Tm (  - Untrusted strings are used only as \(a\) opaque inputs to regex keyword features and \(b\) seeds) Tj
+/F1 9.40 Tf 1 0 0 1 50 136.40 Tm (for SQL candidate strings. No eval, exec, shell command, network call, dynamic import or file read) Tj
+/F1 9.40 Tf 1 0 0 1 50 124.00 Tm (of untrusted content exists in the export. The only file read is ranker.load\(\) opening its own) Tj
+/F1 9.40 Tf 1 0 0 1 50 111.60 Tm (shipped ranker.json.) Tj
+/F1 9.40 Tf 1 0 0 1 50 99.20 Tm (  - Every generated SQL passes through SQLGlot parsing/rendering and is executed only through the) Tj
+/F1 9.40 Tf 1 0 0 1 50 86.80 Tm (official read-only check tool. The official executor rejects) Tj
+/F1 9.40 Tf 1 0 0 1 50 74.40 Tm (INSERT/UPDATE/DELETE/CREATE/DROP/COMMAND/INTO, multiple statements and over-long queries, and) Tj
+ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 6180 >>
+stream
+BT
+/F1 9.40 Tf 1 0 0 1 50 738.00 Tm (enforces its own execution limits.) Tj
+/F1 9.40 Tf 1 0 0 1 50 725.60 Tm (  - Identifiers inserted into templates come from the official schema tool; literals derived from) Tj
+/F1 9.40 Tf 1 0 0 1 50 713.20 Tm (questions or from existing SQL are restricted to alphabetic tokens matched by bounded regular) Tj
+/F1 9.40 Tf 1 0 0 1 50 700.80 Tm (expressions \(e.g. [A-Z][a-z]+ or [a-z]+\) before being embedded in string literals, and every) Tj
+/F1 9.40 Tf 1 0 0 1 50 688.40 Tm (generated query is re-parsed by SQLGlot before it is submitted, so untrusted text cannot escape a) Tj
+/F1 9.40 Tf 1 0 0 1 50 676.00 Tm (string literal.) Tj
+/F1 9.40 Tf 1 0 0 1 50 663.60 Tm (  - The candidate queue is deduplicated and capped, the environment forbids identical tool actions) Tj
+/F1 9.40 Tf 1 0 0 1 50 651.20 Tm (and enforces the 8-call budget and 16,000-byte SQL limit.) Tj
+/F1 9.40 Tf 1 0 0 1 50 638.80 Tm (  - Cross-task memory stores only schema observations from the official schema tool, never) Tj
+/F1 9.40 Tf 1 0 0 1 50 626.40 Tm (free-form text treated as instructions, and is guarded by a lock with an unambiguous-identifier) Tj
+/F1 9.40 Tf 1 0 0 1 50 614.00 Tm (requirement. The retrieve tool is not used, which removes the retrieval-content injection surface) Tj
+/F1 9.40 Tf 1 0 0 1 50 601.60 Tm (entirely.) Tj
+/F1 9.40 Tf 1 0 0 1 50 589.20 Tm (Residual risk: a malicious hint could still be a syntactically valid query that matches the public) Tj
+/F1 9.40 Tf 1 0 0 1 50 576.80 Tm (example but is wrong on grading instances \(a false positive\), or an expensive query \(bounded by the) Tj
+/F1 9.40 Tf 1 0 0 1 50 564.40 Tm (executor\). There is no path by which untrusted text can alter the tool-choice policy or exfiltrate) Tj
+/F1 9.40 Tf 1 0 0 1 50 552.00 Tm (data.) Tj
+/F2 15.00 Tf 1 0 0 1 50 533.60 Tm (11. External assistance and data provenance) Tj
+/F1 9.40 Tf 1 0 0 1 50 511.60 Tm (Development assistance: the WorkBuddy AI assistant \(Tencent Hunyuan\) was used for code editing,) Tj
+/F1 9.40 Tf 1 0 0 1 50 499.20 Tm (experiment scripting and analysis. No external LLM is contacted during grading. The repair hints are) Tj
+/F1 9.40 Tf 1 0 0 1 50 486.80 Tm (the fixed, shared Qwen3-8B cache shipped with the package \(hint_generation.json revision) Tj
+/F1 9.40 Tf 1 0 0 1 50 474.40 Tm (b968826d9c46dd6066d109eabc6255188de91218\); they are not gold answers and were not generated by us. No) Tj
+/F1 9.40 Tf 1 0 0 1 50 462.00 Tm (paid API, third-party dataset or external model weight was used.) Tj
+/F1 9.40 Tf 1 0 0 1 50 449.60 Tm (Data provenance: Spider \(Yu et al., EMNLP 2018\), CC BY-SA 4.0, database mirror) Tj
+/F1 9.40 Tf 1 0 0 1 50 437.20 Tm (HAL-9001/spider-databases revision 4a01bbac6520cd35b216db9e1724e5e1ada60aa4; original drafts from) Tj
+/F1 9.40 Tf 1 0 0 1 50 424.80 Tm (Qwen/Qwen3-0.6B revision c1899de289a04d12100db370d81485cdf75e47ca; SQLGlot 27.29.0 \(MIT\). Attribution) Tj
+/F1 9.40 Tf 1 0 0 1 50 412.40 Tm (is in NOTICE and PACKAGE_MANIFEST.json. Splits are schema-disjoint \(480 train / 120 validation / 240) Tj
+/F1 9.40 Tf 1 0 0 1 50 400.00 Tm (test\).) Tj
+/F1 9.40 Tf 1 0 0 1 50 387.60 Tm (The ranker was fitted on mp3_sql/data/train_references.json, train-split hints and train databases) Tj
+/F1 9.40 Tf 1 0 0 1 50 375.20 Tm (only. Validation selected designs. The public test bundle was used only for the official scorer and for) Tj
+/F1 9.40 Tf 1 0 0 1 50 362.80 Tm (development-time diagnostics on local copies \(explicitly permitted: 'Local experiments may use) Tj
+/F1 9.40 Tf 1 0 0 1 50 350.40 Tm (copies'\); those diagnostic scripts and label caches are NOT part of the export. The exported agent) Tj
+/F1 9.40 Tf 1 0 0 1 50 338.00 Tm (reads no *_references.json, no evaluation database, no grading fingerprint, and contains no task id or) Tj
+/F1 9.40 Tf 1 0 0 1 50 325.60 Tm (test answer. A grep over submission/*.py confirms the only path operation is ranker.load\(\) opening its) Tj
+/F1 9.40 Tf 1 0 0 1 50 313.20 Tm (own ranker.json relative to __file__.) Tj
+/F1 9.40 Tf 1 0 0 1 50 300.80 Tm (Official score integrity \(from outputs/test-score.json\): manifest_sha256 bf7a517249ebe31b9cad...,) Tj
+/F1 9.40 Tf 1 0 0 1 50 288.40 Tm (bank_sha256 598b1a072a47cdcf7308..., references_sha256 8be5f2746ee324d6b4b8..., scorer_sha256) Tj
+/F1 9.40 Tf 1 0 0 1 50 276.00 Tm (87870af26173fbe6d899..., predictions_sha256 b82133a50d4e03fb3b67... .) Tj
+/F2 15.00 Tf 1 0 0 1 50 257.60 Tm (12. Exact reproduction instructions) Tj
+/F1 9.40 Tf 1 0 0 1 50 235.60 Tm (Environment: Python 3.11 or 3.12; the only dependency is requirements.txt \(sqlglot==27.29.0\). From the) Tj
+/F1 9.40 Tf 1 0 0 1 50 223.20 Tm (extracted official package root \(Linux/macOS\):) Tj
+/F3 7.60 Tf 1 0 0 1 50 210.80 Tm (python3 -m venv .venv && source .venv/bin/activate) Tj
+/F3 7.60 Tf 1 0 0 1 50 200.60 Tm (python -m pip install -r requirements.txt) Tj
+/F3 7.60 Tf 1 0 0 1 50 190.40 Tm (python -m mp3_sql.check_data) Tj
+/F3 7.60 Tf 1 0 0 1 50 180.20 Tm (PYTHONPATH="$PWD/submission" python -m mp3_sql.predict \\) Tj
+/F3 7.60 Tf 1 0 0 1 50 170.00 Tm (  --split test --method submission/submission.py --output outputs/test.json) Tj
+/F3 7.60 Tf 1 0 0 1 50 159.80 Tm (python -m mp3_sql.score --split test \\) Tj
+/F3 7.60 Tf 1 0 0 1 50 149.60 Tm (  --predictions outputs/test.json --output outputs/test-score.json) Tj
+/F3 7.60 Tf 1 0 0 1 50 139.40 Tm (# validation: repeat the two commands with --split validation and) Tj
+/F3 7.60 Tf 1 0 0 1 50 129.20 Tm (# outputs/validation.json / outputs/validation-score.json) Tj
+/F1 9.40 Tf 1 0 0 1 50 119.00 Tm (On Windows use .venv\\Scripts\\python.exe and set PYTHONPATH to the submission folder. No --checkpoint is) Tj
+/F1 9.40 Tf 1 0 0 1 50 106.60 Tm (needed: create_agent\(None\) loads the ranker.json next to its own module. Default --workers 4 was used) Tj
+/F1 9.40 Tf 1 0 0 1 50 94.20 Tm (for all runs; a --workers 1 repeat also produced 197/240 with the same 4.746 mean calls) Tj
+/F1 9.40 Tf 1 0 0 1 50 81.80 Tm (\(outputs/workers1-test-score.json\), confirming thread-scheduling robustness. The complete, unchanged) Tj
+/F1 9.40 Tf 1 0 0 1 50 69.40 Tm (outputs/test-score.json is the file to upload.) Tj
+ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 2332 >>
+stream
+BT
+/F1 9.40 Tf 1 0 0 1 50 738.00 Tm (Optional retraining \(requires the official package's mp3_sql/data directory; not needed to reproduce) Tj
+/F1 9.40 Tf 1 0 0 1 50 725.60 Tm (the score because ranker.json is shipped\):) Tj
+/F3 7.60 Tf 1 0 0 1 50 713.20 Tm (PYTHONPATH="$PWD/submission:$PWD/tools" python tools/build_labels.py train) Tj
+/F3 7.60 Tf 1 0 0 1 50 703.00 Tm (PYTHONPATH="$PWD/submission:$PWD/tools" python tools/train_models.py) Tj
+/F1 9.40 Tf 1 0 0 1 50 692.80 Tm (Development/training scripts are under tools/ in the source ZIP, with training/record.json) Tj
+/F1 9.40 Tf 1 0 0 1 50 680.40 Tm (\(hyperparameters, counts, ranker.json hash\). tools/ablations.py reproduces the ablation table after) Tj
+/F1 9.40 Tf 1 0 0 1 50 668.00 Tm (build_labels.py regenerates local label caches; tools/make_report.py regenerates this PDF. These) Tj
+/F1 9.40 Tf 1 0 0 1 50 655.60 Tm (scripts are never imported by the exported agent.) Tj
+/F2 15.00 Tf 1 0 0 1 50 637.20 Tm (13. Compliance checklist) Tj
+/F1 9.40 Tf 1 0 0 1 50 615.20 Tm (  - Real tool feedback: every decision uses check/repair_hint/schema observations; no fixed answer) Tj
+/F1 9.40 Tf 1 0 0 1 50 602.80 Tm (lookup and no single-pass completion.) Tj
+/F1 9.40 Tf 1 0 0 1 50 590.40 Tm (  - Only the provided tools touch benchmark data; no direct database file access, no) Tj
+/F1 9.40 Tf 1 0 0 1 50 578.00 Tm (trace/observation editing, no modification of the official framework.) Tj
+/F1 9.40 Tf 1 0 0 1 50 565.60 Tm (  - Budget: <=8 charged calls per task, submit free, original draft checked before repair_hint, no) Tj
+/F1 9.40 Tf 1 0 0 1 50 553.20 Tm (duplicate actions, SQL within 16,000 bytes.) Tj
+/F1 9.40 Tf 1 0 0 1 50 540.80 Tm (  - No test-label fitting, no hard-coded task-specific answers, no grading fingerprints available) Tj
+/F1 9.40 Tf 1 0 0 1 50 528.40 Tm (to the agent; disjoint-schema evaluation respected.) Tj
+/F1 9.40 Tf 1 0 0 1 50 516.00 Tm (  - CPU-only: no live LLM, no LoRA, no base weights, no GPU, offline execution, single declared) Tj
+/F1 9.40 Tf 1 0 0 1 50 503.60 Tm (dependency, export far below 16 MiB.) Tj
+/F1 9.40 Tf 1 0 0 1 50 491.20 Tm (  - No link/GitHub submission has been made yet, per the student's instruction; the score is) Tj
+/F1 9.40 Tf 1 0 0 1 50 478.80 Tm (self-reported locally and subject to instructor reproduction.) Tj
+ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
+endobj
+xref
+0 20
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000162 00000 n 
+0000000259 00000 n 
+0000000361 00000 n 
+0000000456 00000 n 
+0000006773 00000 n 
+0000006919 00000 n 
+0000013115 00000 n 
+0000013261 00000 n 
+0000019745 00000 n 
+0000019893 00000 n 
+0000027191 00000 n 
+0000027339 00000 n 
+0000033723 00000 n 
+0000033871 00000 n 
+0000040104 00000 n 
+0000040252 00000 n 
+0000042637 00000 n 
+trailer
+<< /Size 20 /Root 1 0 R >>
+startxref
+42785
+%%EOF

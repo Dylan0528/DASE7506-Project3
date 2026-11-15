@@ -1,0 +1,62 @@
+{
+  "route": "CPU-only non-LLM linear candidate ranker (no live LLM, no LoRA)",
+  "training_split": "train",
+  "tasks": 480,
+  "candidate_samples": 5817,
+  "label_sources": [
+    "mp3_sql/data/train_references.json (train split only)",
+    "mp3_sql/data/repair_hints.json (train split only)",
+    "mp3_sql/data/public_results.json and public train databases"
+  ],
+  "validation_usage": "design and hyperparameter selection only",
+  "test_labels_used_for_fitting": false,
+  "feature_sets": [
+    "vector (v1)",
+    "vector2 (v2)"
+  ],
+  "models": [
+    "choice",
+    "choice2",
+    "choice_list",
+    "choice_list2",
+    "choice_pair",
+    "choice_pair2",
+    "priority",
+    "priority2",
+    "priority_pair",
+    "priority_pair2"
+  ],
+  "hyperparameters": {
+    "logistic": {
+      "epochs": 35,
+      "learning_rate": 0.22,
+      "l2": 0.0015
+    },
+    "pairwise": {
+      "epochs": 70,
+      "learning_rate": 0.18,
+      "l2": 0.0008
+    },
+    "listwise": {
+      "epochs": 80,
+      "learning_rate": 0.18,
+      "l2": 0.0006
+    },
+    "correct_sample_weight": 3.0
+  },
+  "gpu": false,
+  "ranker_json_bytes": 129729,
+  "ranker_json_sha256": "b8f34fb51d9ef2b8f674cac14b1893c9d0a4b375bbb331b2ea164920d0a26918",
+  "coefficients": 875,
+  "scripts": [
+    "tools/build_labels.py",
+    "tools/train_ranker.py",
+    "tools/train_models.py"
+  ],
+  "official_test_result": {
+    "n": 240,
+    "correct": 197,
+    "accuracy": 82.0833,
+    "predictions_sha256": "b82133a50d4e03fb3b679dafdd3f8d6d93890548f38686591877084f85e5cce5"
+  }
+}

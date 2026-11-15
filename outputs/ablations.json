@@ -1,0 +1,150 @@
+{
+  "validation": {
+    "final": {
+      "correct": 99,
+      "n": 120,
+      "accuracy": 82.5,
+      "mean_tool_calls": 4.9
+    },
+    "no_schema_memory": {
+      "correct": 99,
+      "n": 120,
+      "accuracy": 82.5,
+      "mean_tool_calls": 5.608
+    },
+    "heuristic_queue": {
+      "correct": 94,
+      "n": 120,
+      "accuracy": 78.33,
+      "mean_tool_calls": 5.2
+    },
+    "no_column_priors": {
+      "correct": 97,
+      "n": 120,
+      "accuracy": 80.83,
+      "mean_tool_calls": 4.908
+    },
+    "no_occam_prior": {
+      "correct": 99,
+      "n": 120,
+      "accuracy": 82.5,
+      "mean_tool_calls": 4.9
+    },
+    "v1_features_only": {
+      "correct": 98,
+      "n": 120,
+      "accuracy": 81.67,
+      "mean_tool_calls": 4.892
+    },
+    "no_hints": {
+      "correct": 56,
+      "n": 120,
+      "accuracy": 46.67,
+      "mean_tool_calls": 4.6
+    },
+    "no_stop_early": {
+      "correct": 100,
+      "n": 120,
+      "accuracy": 83.33,
+      "mean_tool_calls": 6.917
+    },
+    "no_queue_dedup": {
+      "correct": 97,
+      "n": 120,
+      "accuracy": 80.83,
+      "mean_tool_calls": 5.042
+    },
+    "no_wide_candidates": {
+      "correct": 99,
+      "n": 120,
+      "accuracy": 82.5,
+      "mean_tool_calls": 4.892
+    },
+    "no_relative_choice": {
+      "correct": 98,
+      "n": 120,
+      "accuracy": 81.67,
+      "mean_tool_calls": 4.9
+    },
+    "no_budget_tuning": {
+      "correct": 99,
+      "n": 120,
+      "accuracy": 82.5,
+      "mean_tool_calls": 6.1
+    }
+  },
+  "test": {
+    "final": {
+      "correct": 197,
+      "n": 240,
+      "accuracy": 82.08,
+      "mean_tool_calls": 4.746
+    },
+    "no_schema_memory": {
+      "correct": 195,
+      "n": 240,
+      "accuracy": 81.25,
+      "mean_tool_calls": 5.533
+    },
+    "heuristic_queue": {
+      "correct": 178,
+      "n": 240,
+      "accuracy": 74.17,
+      "mean_tool_calls": 4.992
+    },
+    "no_column_priors": {
+      "correct": 195,
+      "n": 240,
+      "accuracy": 81.25,
+      "mean_tool_calls": 4.742
+    },
+    "no_occam_prior": {
+      "correct": 195,
+      "n": 240,
+      "accuracy": 81.25,
+      "mean_tool_calls": 4.746
+    },
+    "v1_features_only": {
+      "correct": 191,
+      "n": 240,
+      "accuracy": 79.58,
+      "mean_tool_calls": 4.746
+    },
+    "no_hints": {
+      "correct": 114,
+      "n": 240,
+      "accuracy": 47.5,
+      "mean_tool_calls": 4.571
+    },
+    "no_stop_early": {
+      "correct": 196,
+      "n": 240,
+      "accuracy": 81.67,
+      "mean_tool_calls": 6.829
+    },
+    "no_queue_dedup": {
+      "correct": 194,
+      "n": 240,
+      "accuracy": 80.83,
+      "mean_tool_calls": 4.871
+    },
+    "no_wide_candidates": {
+      "correct": 196,
+      "n": 240,
+      "accuracy": 81.67,
+      "mean_tool_calls": 4.737
+    },
+    "no_relative_choice": {
+      "correct": 195,
+      "n": 240,
+      "accuracy": 81.25,
+      "mean_tool_calls": 4.746
+    },
+    "no_budget_tuning": {
+      "correct": 197,
+      "n": 240,
+      "accuracy": 82.08,
+      "mean_tool_calls": 5.975
+    }
+  }
+}

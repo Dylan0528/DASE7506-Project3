@@ -1,0 +1,22 @@
+{
+  "predict_test": {
+    "wall_seconds": 81.26,
+    "cpu_seconds": 101.64,
+    "peak_tree_rss_mib": 159.2,
+    "peak_single_process_rss_mib": 48.0,
+    "tracked_processes": 539,
+    "command": "D:\\Users\\2022\\Desktop\\Comprehensive\\HKU\\Course\\7506AML\\Assignment\\Asssignment3\\MP3_SQL_student_package\\.venv\\Scripts\\python.exe -m mp3_sql.predict --split test --method submission/submission.py --output outputs/measure-test.json",
+    "stdout": "{\"n\": 240, \"prediction_seconds\": 80.76169509999454}"
+  },
+  "score_test": {
+    "wall_seconds": 112.28,
+    "cpu_seconds": 111.2,
+    "peak_tree_rss_mib": 154.5,
+    "peak_single_process_rss_mib": 47.1,
+    "tracked_processes": 665,
+    "command": "D:\\Users\\2022\\Desktop\\Comprehensive\\HKU\\Course\\7506AML\\Assignment\\Asssignment3\\MP3_SQL_student_package\\.venv\\Scripts\\python.exe -m mp3_sql.score --split test --predictions outputs/measure-test.json --output outputs/measure-test-score.json",
+    "stdout": "{\n  \"protocol\": \"dase7506-sql-repair-v1\",\n  \"n\": 240,\n  \"correct\": 197,\n  \"accuracy\": 82.08333333333333,\n  \"mean_tool_calls\": 4.745833333333334,\n  \"split\": \"test\",\n  \"benchmark\": \"spider-sql-repair-public-evaluation-v3\",\n  \"manifest_sha256\": \"bf7a517249ebe31b9cad8cbf5d6598fde98316d89f9aa1172cae3ad83289a6bc\",\n  \"bank_sha256\": \"598b1a072a47cdcf7308dc5646ae2bffd356390ab8df533510b69f2c884d712c\",\n  \"references_sha256\": \"8be5f2746ee324d6b4b880dd84a2f8de56fa540af08e93842c0476adec581506\",\n  \"scorer_sha256\": \"87870af26173fbe6d8994e4de179fb272ef1fadf7dcaafc2e7b4c814c61ec95b\",\n  \"executor_sha256\": \"4ecc3839728d68bd83f0d2a52cdd8392fd76dbaec3e54a19422118dee587b471\",\n  \"predictions_sha256\": \"cced1312440c1d92b230ebe15cf05781abe620a30d45eee124066268b61cba22\",\n  \"scoring_seconds\": 111.72527149999951\n}"
+  },
+  "total_wall_seconds": 193.54,
+  "total_cpu_seconds": 212.84
+}

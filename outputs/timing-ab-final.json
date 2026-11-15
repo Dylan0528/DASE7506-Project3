@@ -1,0 +1,41 @@
+[
+  {
+    "name": "B-new",
+    "split": "test",
+    "correct": 197,
+    "n": 240,
+    "accuracy": 82.0833,
+    "calls": 4.746,
+    "predict_wall": 77.13,
+    "score_wall": 113.51,
+    "total_wall": 190.64,
+    "prediction_seconds": 76.64,
+    "scoring_seconds": 113.09
+  },
+  {
+    "name": "A-ship",
+    "split": "test",
+    "correct": 197,
+    "n": 240,
+    "accuracy": 82.0833,
+    "calls": 5.367,
+    "predict_wall": 86.31,
+    "score_wall": 126.92,
+    "total_wall": 213.23,
+    "prediction_seconds": 85.84,
+    "scoring_seconds": 126.46
+  },
+  {
+    "name": "B-new",
+    "split": "validation",
+    "correct": 99,
+    "n": 120,
+    "accuracy": 82.5,
+    "calls": 4.9,
+    "predict_wall": 41.37,
+    "score_wall": 59.8,
+    "total_wall": 101.17,
+    "prediction_seconds": 40.81,
+    "scoring_seconds": 59.29
+  }
+]
